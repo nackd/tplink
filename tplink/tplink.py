@@ -17,6 +17,7 @@ class TpLinkClient(object):
             '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2})')
 
         self.parse_names = re.compile('hostName=(.*)')
+        self.parse_active = re.compile('active=(.)')
 
     def get_connected_devices(self):
         connection_string = self.password
@@ -38,7 +39,12 @@ class TpLinkClient(object):
             },
             timeout=10)
 
-        mac_addresses = self.parse_macs.findall(page.text)
-        host_names = self.parse_names.findall(page.text)
+        actives = self.parse_active.findall(page.text)
+        mac_addresses = [mac for i, mac
+                         in enumerate(self.parse_macs.findall(page.text))
+                         if actives[i] == "1"]
+        host_names = [host for i, host
+                      in enumerate(self.parse_names.findall(page.text))
+                      if actives[i] == "1"]
 
         return dict(zip(mac_addresses, host_names))
